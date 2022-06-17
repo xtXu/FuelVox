@@ -3,24 +3,25 @@
 
 #include <Eigen/Eigen>
 
-#include <ros/ros.h>
-#include <nav_msgs/Path.h>
-#include <std_msgs/Empty.h>
 #include <nav_msgs/Odometry.h>
+#include <nav_msgs/Path.h>
+#include <ros/node_handle.h>
+#include <ros/ros.h>
+#include <std_msgs/Empty.h>
 #include <visualization_msgs/Marker.h>
 
 #include <algorithm>
 #include <iostream>
-#include <vector>
 #include <memory>
 #include <string>
 #include <thread>
+#include <vector>
 
 using Eigen::Vector3d;
-using std::vector;
 using std::shared_ptr;
-using std::unique_ptr;
 using std::string;
+using std::unique_ptr;
+using std::vector;
 
 namespace fast_planner {
 class FastPlannerManager;
@@ -32,7 +33,7 @@ struct FSMData;
 enum EXPL_STATE { INIT, WAIT_TRIGGER, PLAN_TRAJ, PUB_TRAJ, EXEC_TRAJ, FINISH };
 
 class FastExplorationFSM {
-private:
+ private:
   /* planning utils */
   shared_ptr<FastPlannerManager> planner_manager_;
   shared_ptr<FastExplorationManager> expl_manager_;
@@ -46,6 +47,7 @@ private:
 
   /* ROS utils */
   ros::NodeHandle node_;
+  ros::NodeHandle node_public_;
   ros::Timer exec_timer_, safety_timer_, vis_timer_, frontier_timer_;
   ros::Subscriber trigger_sub_, odom_sub_;
   ros::Publisher replan_pub_, new_pub_, bspline_pub_;
@@ -63,13 +65,11 @@ private:
   void visualize();
   void clearVisMarker();
 
-public:
-  FastExplorationFSM(/* args */) {
-  }
-  ~FastExplorationFSM() {
-  }
+ public:
+  FastExplorationFSM(/* args */) {}
+  ~FastExplorationFSM() {}
 
-  void init(ros::NodeHandle& nh);
+  void init(ros::NodeHandle& nh, ros::NodeHandle& nh_public);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };

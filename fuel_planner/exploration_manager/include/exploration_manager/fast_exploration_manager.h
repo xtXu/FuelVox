@@ -1,6 +1,7 @@
 #ifndef _EXPLORATION_MANAGER_H_
 #define _EXPLORATION_MANAGER_H_
 
+#include <ros/node_handle.h>
 #include <ros/ros.h>
 #include <Eigen/Eigen>
 #include <memory>
@@ -26,7 +27,7 @@ public:
   FastExplorationManager();
   ~FastExplorationManager();
 
-  void initialize(ros::NodeHandle& nh);
+  void initialize(ros::NodeHandle& nh, ros::NodeHandle& nh_public);
 
   int planExploreMotion(const Vector3d& pos, const Vector3d& vel, const Vector3d& acc,
                         const Vector3d& yaw);

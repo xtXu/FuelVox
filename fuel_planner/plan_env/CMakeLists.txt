@@ -15,6 +15,8 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   cv_bridge
   message_filters
+  voxblox
+  voxblox_ros
 )
 
 find_package(Eigen3 REQUIRED)
@@ -23,7 +25,7 @@ find_package(PCL 1.7 REQUIRED)
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES plan_env
- CATKIN_DEPENDS roscpp std_msgs
+ CATKIN_DEPENDS roscpp std_msgs voxblox voxblox_ros
 #  DEPENDS system_lib
 )
 

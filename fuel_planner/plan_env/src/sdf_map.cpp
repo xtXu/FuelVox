@@ -1,6 +1,7 @@
 #include "plan_env/sdf_map.h"
 #include "plan_env/map_ros.h"
 #include <plan_env/raycast.h>
+#include <voxblox_ros/esdf_server.h>
 
 namespace fast_planner {
 SDFMap::SDFMap() {
@@ -90,6 +91,12 @@ void SDFMap::initMap(ros::NodeHandle& nh) {
 
   caster_.reset(new RayCaster);
   caster_->setParams(mp_->resolution_, mp_->map_origin_);
+}
+
+void SDFMap::initMap(ros::NodeHandle& nh, ros::NodeHandle& nh_public){
+  initMap(nh);
+  esdf_server_.reset(new voxblox::EsdfServer(nh_public, nh));
+  ROS_INFO("initialize with Voxblox !");
 }
 
 void SDFMap::resetBuffer() {

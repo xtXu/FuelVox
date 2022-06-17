@@ -11,9 +11,10 @@ using namespace fast_planner;
 int main(int argc, char** argv) {
   ros::init(argc, argv, "exploration_node");
   ros::NodeHandle nh("~");
+  ros::NodeHandle nh_public;
 
   FastExplorationFSM expl_fsm;
-  expl_fsm.init(nh);
+  expl_fsm.init(nh, nh_public);
 
   ros::Duration(1.0).sleep();
   ros::spin();

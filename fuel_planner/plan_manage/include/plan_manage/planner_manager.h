@@ -15,6 +15,7 @@
 
 #include <plan_manage/plan_container.hpp>
 
+#include <ros/node_handle.h>
 #include <ros/ros.h>
 
 namespace fast_planner {
@@ -41,6 +42,7 @@ public:
                       const double& relax_time);
 
   void initPlanModules(ros::NodeHandle& nh);
+  void initPlanModules(ros::NodeHandle& nh, ros::NodeHandle& nh_public);
   void setGlobalWaypoints(vector<Eigen::Vector3d>& waypoints);
 
   bool checkTrajCollision(double& distance);

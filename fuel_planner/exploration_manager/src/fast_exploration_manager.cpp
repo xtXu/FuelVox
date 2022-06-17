@@ -1,5 +1,6 @@
 // #include <fstream>
 #include <exploration_manager/fast_exploration_manager.h>
+#include <ros/node_handle.h>
 #include <thread>
 #include <iostream>
 #include <fstream>
@@ -33,9 +34,10 @@ FastExplorationManager::~FastExplorationManager() {
   ViewNode::map_.reset();
 }
 
-void FastExplorationManager::initialize(ros::NodeHandle& nh) {
+void FastExplorationManager::initialize(ros::NodeHandle& nh, ros::NodeHandle& nh_public) {
   planner_manager_.reset(new FastPlannerManager);
-  planner_manager_->initPlanModules(nh);
+  // planner_manager_->initPlanModules(nh);
+  planner_manager_->initPlanModules(nh, nh_public);
   edt_environment_ = planner_manager_->edt_environment_;
   sdf_map_ = edt_environment_->sdf_map_;
   frontier_finder_.reset(new FrontierFinder(edt_environment_, nh));

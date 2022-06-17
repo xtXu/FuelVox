@@ -1,6 +1,7 @@
 
 #include <plan_manage/planner_manager.h>
 #include <exploration_manager/fast_exploration_manager.h>
+#include <ros/node_handle.h>
 #include <traj_utils/planning_visualization.h>
 
 #include <exploration_manager/fast_exploration_fsm.h>
@@ -11,7 +12,7 @@
 using Eigen::Vector4d;
 
 namespace fast_planner {
-void FastExplorationFSM::init(ros::NodeHandle& nh) {
+void FastExplorationFSM::init(ros::NodeHandle& nh, ros::NodeHandle& nh_public) {
   fp_.reset(new FSMParam);
   fd_.reset(new FSMData);
 
@@ -23,7 +24,7 @@ void FastExplorationFSM::init(ros::NodeHandle& nh) {
 
   /* Initialize main modules */
   expl_manager_.reset(new FastExplorationManager);
-  expl_manager_->initialize(nh);
+  expl_manager_->initialize(nh, nh_public);
   visualization_.reset(new PlanningVisualization(nh));
 
   planner_manager_ = expl_manager_->planner_manager_;

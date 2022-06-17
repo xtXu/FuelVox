@@ -3,6 +3,7 @@
 #include <plan_env/sdf_map.h>
 #include <plan_env/raycast.h>
 
+#include <ros/node_handle.h>
 #include <thread>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -46,6 +47,79 @@ void FastPlannerManager::initPlanModules(ros::NodeHandle& nh) {
   local_data_.traj_id_ = 0;
   sdf_map_.reset(new SDFMap);
   sdf_map_->initMap(nh);
+  edt_environment_.reset(new EDTEnvironment);
+  edt_environment_->setMap(sdf_map_);
+
+  if (use_geometric_path) {
+    path_finder_.reset(new Astar);
+    // path_finder_->setParam(nh);
+    // path_finder_->setEnvironment(edt_environment_);
+    // path_finder_->init();
+    path_finder_->init(nh, edt_environment_);
+  }
+
+  if (use_kinodynamic_path) {
+    kino_path_finder_.reset(new KinodynamicAstar);
+    kino_path_finder_->setParam(nh);
+    kino_path_finder_->setEnvironment(edt_environment_);
+    kino_path_finder_->init();
+  }
+
+  if (use_optimization) {
+    bspline_optimizers_.resize(10);
+    for (int i = 0; i < 10; ++i) {
+      bspline_optimizers_[i].reset(new BsplineOptimizer);
+      bspline_optimizers_[i]->setParam(nh);
+      bspline_optimizers_[i]->setEnvironment(edt_environment_);
+    }
+  }
+
+  if (use_topo_path) {
+    topo_prm_.reset(new TopologyPRM);
+    topo_prm_->setEnvironment(edt_environment_);
+    topo_prm_->init(nh);
+  }
+
+  if (use_active_perception) {
+    frontier_finder_.reset(new FrontierFinder(edt_environment_, nh));
+    heading_planner_.reset(new HeadingPlanner(nh));
+    heading_planner_->setMap(sdf_map_);
+    visib_util_.reset(new VisibilityUtil(nh));
+    visib_util_->setEDTEnvironment(edt_environment_);
+    plan_data_.view_cons_.idx_ = -1;
+  }
+}
+
+void FastPlannerManager::initPlanModules(ros::NodeHandle& nh, ros::NodeHandle& nh_public) {
+  /* read algorithm parameters */
+
+  nh.param("manager/max_vel", pp_.max_vel_, -1.0);
+  nh.param("manager/max_acc", pp_.max_acc_, -1.0);
+  nh.param("manager/max_jerk", pp_.max_jerk_, -1.0);
+  nh.param("manager/accept_vel", pp_.accept_vel_, pp_.max_vel_ + 0.5);
+  nh.param("manager/accept_acc", pp_.accept_acc_, pp_.max_acc_ + 0.5);
+  nh.param("manager/max_yawdot", pp_.max_yawdot_, -1.0);
+  nh.param("manager/dynamic_environment", pp_.dynamic_, -1);
+  nh.param("manager/clearance_threshold", pp_.clearance_, -1.0);
+  nh.param("manager/local_segment_length", pp_.local_traj_len_, -1.0);
+  nh.param("manager/control_points_distance", pp_.ctrl_pt_dist, -1.0);
+  nh.param("manager/bspline_degree", pp_.bspline_degree_, 3);
+  nh.param("manager/min_time", pp_.min_time_, false);
+
+  bool use_geometric_path, use_kinodynamic_path, use_topo_path, use_optimization,
+      use_active_perception;
+  nh.param("manager/use_geometric_path", use_geometric_path, false);
+  nh.param("manager/use_kinodynamic_path", use_kinodynamic_path, false);
+  nh.param("manager/use_topo_path", use_topo_path, false);
+  nh.param("manager/use_optimization", use_optimization, false);
+  nh.param("manager/use_active_perception", use_active_perception, false);
+
+  local_data_.traj_id_ = 0;
+
+  // init sdf_map_ with voxblox
+  sdf_map_.reset(new SDFMap);
+  sdf_map_->initMap(nh, nh_public);
+
   edt_environment_.reset(new EDTEnvironment);
   edt_environment_->setMap(sdf_map_);
 
