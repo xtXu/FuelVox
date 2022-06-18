@@ -15,10 +15,15 @@
 
 #include <memory>
 #include <random>
+#include <string>
+#include <vector>
 
 using std::shared_ptr;
 using std::normal_distribution;
 using std::default_random_engine;
+using std::string;
+using std::vector;
+using std::unique_ptr;
 
 namespace fast_planner {
 class SDFMap;
@@ -44,6 +49,7 @@ private:
   void publishUpdateRange();
   void publishUnknown();
   void publishDepth();
+  void publishSensorDepth();
 
   void proessDepthImage();
 
@@ -65,7 +71,7 @@ private:
   SynchronizerCloudPose sync_cloud_pose_;
 
   ros::Publisher map_local_pub_, map_local_inflate_pub_, esdf_pub_, map_all_pub_, unknown_pub_,
-      update_range_pub_, depth_pub_;
+      update_range_pub_, depth_pub_, sensor_depth_pub_;
   ros::Timer esdf_timer_, vis_timer_;
 
   // params, depth projection
@@ -75,6 +81,7 @@ private:
   double k_depth_scaling_factor_;
   int skip_pixel_;
   string frame_id_;
+  string sensor_frame_id_;
   // msg publication
   double esdf_slice_height_;
   double visualization_truncate_height_, visualization_truncate_low_;
@@ -93,6 +100,7 @@ private:
   double fuse_time_, esdf_time_, max_fuse_time_, max_esdf_time_;
   int fuse_num_, esdf_num_;
   pcl::PointCloud<pcl::PointXYZ> point_cloud_;
+  pcl::PointCloud<pcl::PointXYZ> sensor_point_cloud_; // point cloud in sensor frame, just used for voxblox
 
   normal_distribution<double> rand_noise_;
   default_random_engine eng_;

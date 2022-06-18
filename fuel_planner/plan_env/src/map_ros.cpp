@@ -3,7 +3,11 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <ros/time.h>
 #include <visualization_msgs/Marker.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
 
 #include <fstream>
 
@@ -36,9 +40,11 @@ void MapROS::init() {
   node_.param("map_ros/show_esdf_time", show_esdf_time_, false);
   node_.param("map_ros/show_all_map", show_all_map_, false);
   node_.param("map_ros/frame_id", frame_id_, string("world"));
+  node_.param("map_ros/sensor_frame_id", sensor_frame_id_, string("camera"));
 
   proj_points_.resize(640 * 480 / (skip_pixel_ * skip_pixel_));
   point_cloud_.points.resize(640 * 480 / (skip_pixel_ * skip_pixel_));
+  sensor_point_cloud_.points.resize(640 * 480 / (skip_pixel_ * skip_pixel_));
   // proj_points_.reserve(640 * 480 / map_->mp_->skip_pixel_ / map_->mp_->skip_pixel_);
   proj_points_cnt = 0;
 
@@ -67,6 +73,7 @@ void MapROS::init() {
   esdf_pub_ = node_.advertise<sensor_msgs::PointCloud2>("/sdf_map/esdf", 10);
   update_range_pub_ = node_.advertise<visualization_msgs::Marker>("/sdf_map/update_range", 10);
   depth_pub_ = node_.advertise<sensor_msgs::PointCloud2>("/sdf_map/depth_cloud", 10);
+  sensor_depth_pub_ = node_.advertise<sensor_msgs::PointCloud2>("/sdf_map/sensor_depth_cloud", 10);
 
   depth_sub_.reset(new message_filters::Subscriber<sensor_msgs::Image>(node_, "/map_ros/depth", 50));
   cloud_sub_.reset(
@@ -120,11 +127,28 @@ void MapROS::updateESDFCallback(const ros::TimerEvent& /*event*/) {
 
 void MapROS::depthPoseCallback(const sensor_msgs::ImageConstPtr& img,
                                const geometry_msgs::PoseStampedConstPtr& pose) {
+  static tf2_ros::TransformBroadcaster bc_world_sensor;
+  geometry_msgs::TransformStamped tf_world_sensor;
+
   camera_pos_(0) = pose->pose.position.x;
   camera_pos_(1) = pose->pose.position.y;
   camera_pos_(2) = pose->pose.position.z;
   if (!map_->isInMap(camera_pos_))  // exceed mapped region
     return;
+
+  tf_world_sensor.header.frame_id = frame_id_;
+  tf_world_sensor.header.stamp = ros::Time::now();
+  tf_world_sensor.child_frame_id = sensor_frame_id_;
+
+  tf_world_sensor.transform.translation.x = pose->pose.position.x;
+  tf_world_sensor.transform.translation.y = pose->pose.position.y;
+  tf_world_sensor.transform.translation.z = pose->pose.position.z;
+  tf_world_sensor.transform.rotation.w = pose->pose.orientation.w;
+  tf_world_sensor.transform.rotation.x = pose->pose.orientation.x;
+  tf_world_sensor.transform.rotation.y = pose->pose.orientation.y;
+  tf_world_sensor.transform.rotation.z = pose->pose.orientation.z;
+
+  bc_world_sensor.sendTransform(tf_world_sensor);
 
   camera_q_ = Eigen::Quaterniond(pose->pose.orientation.w, pose->pose.orientation.x,
                                  pose->pose.orientation.y, pose->pose.orientation.z);
@@ -204,14 +228,22 @@ void MapROS::proessDepthImage() {
       pt_cur(1) = (v - cy_) * depth / fy_;
       pt_cur(2) = depth;
       pt_world = camera_r * pt_cur + camera_pos_;
-      auto& pt = point_cloud_.points[proj_points_cnt++];
+      auto& pt = point_cloud_.points[proj_points_cnt];
       pt.x = pt_world[0];
       pt.y = pt_world[1];
       pt.z = pt_world[2];
+
+      auto& pt_sensor = sensor_point_cloud_.points[proj_points_cnt];
+      pt_sensor.x = pt_cur[0];
+      pt_sensor.y = pt_cur[1];
+      pt_sensor.z = pt_cur[2];
+
+      proj_points_cnt++;
     }
   }
 
   publishDepth();
+  publishSensorDepth();
 }
 
 void MapROS::publishMapAll() {
@@ -359,6 +391,25 @@ void MapROS::publishDepth() {
   pcl::toROSMsg(cloud, cloud_msg);
   depth_pub_.publish(cloud_msg);
 }
+
+
+void MapROS::publishSensorDepth() {
+  pcl::PointXYZ pt;
+  pcl::PointCloud<pcl::PointXYZ> cloud;
+  for (int i = 0; i < proj_points_cnt; ++i) {
+    cloud.push_back(sensor_point_cloud_.points[i]);
+  }
+  cloud.width = cloud.points.size();
+  cloud.height = 1;
+  cloud.is_dense = true;
+  cloud.header.frame_id = sensor_frame_id_;
+  ros::Time now = ros::Time::now();
+  cloud.header.stamp = pcl_conversions::toPCL(now);
+  sensor_msgs::PointCloud2 cloud_msg;
+  pcl::toROSMsg(cloud, cloud_msg);
+  sensor_depth_pub_.publish(cloud_msg);
+}
+
 
 void MapROS::publishUpdateRange() {
   Eigen::Vector3d esdf_min_pos, esdf_max_pos, cube_pos, cube_scale;

@@ -6,7 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Planning1
-        - /Planning1/executed_traj1/Status1
         - /active_perception1
         - /active_perception1/frontier1
         - /active_perception1/frontier1/Namespaces1
@@ -19,6 +18,7 @@ Panels:
         - /processed_msg1/Namespaces1
         - /PointCloud21
         - /PointCloud21/Autocompute Value Bounds1
+        - /VoxbloxMesh1
       Splitter Ratio: 0.5216138362884521
     Tree Height: 602
   - Class: rviz/Selection
@@ -79,7 +79,7 @@ Visualization Manager:
           Marker Topic: /planning_vis/trajectory
           Name: bspline_traj
           Namespaces:
-            {}
+            B-Spline: true
           Queue Size: 100
           Value: true
         - Class: rviz/Marker
@@ -103,7 +103,7 @@ Visualization Manager:
           Marker Topic: /planning/travel_traj
           Name: executed_traj
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
         - Class: rviz/Marker
@@ -111,7 +111,7 @@ Visualization Manager:
           Marker Topic: /planning/position_cmd_vis
           Name: position_cmd
           Namespaces:
-            {}
+            current_pose: true
           Queue Size: 100
           Value: true
       Enabled: true
@@ -123,7 +123,7 @@ Visualization Manager:
           Marker Topic: /planning_vis/frontier
           Name: frontier
           Namespaces:
-            {}
+            frontier: true
           Queue Size: 10000
           Value: true
         - Class: rviz/Marker
@@ -181,9 +181,7 @@ Visualization Manager:
           Enabled: false
           Invert Rainbow: false
           Max Color: 0; 0; 0
-          Max Intensity: 4096
           Min Color: 0; 0; 0
-          Min Intensity: 0
           Name: occupied_local
           Position Transformer: XYZ
           Queue Size: 10
@@ -211,9 +209,7 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 0; 0; 0
-          Max Intensity: 4096
           Min Color: 0; 0; 0
-          Min Intensity: 0
           Name: occupied_all
           Position Transformer: XYZ
           Queue Size: 10
@@ -241,9 +237,7 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 0; 0; 0
-          Max Intensity: 4096
           Min Color: 0; 0; 0
-          Min Intensity: 0
           Name: occupied_local_inflate
           Position Transformer: XYZ
           Queue Size: 10
@@ -271,9 +265,7 @@ Visualization Manager:
           Enabled: false
           Invert Rainbow: false
           Max Color: 0; 0; 0
-          Max Intensity: 4096
           Min Color: 0; 0; 0
-          Min Intensity: 0
           Name: unknown
           Position Transformer: XYZ
           Queue Size: 10
@@ -301,9 +293,7 @@ Visualization Manager:
           Enabled: false
           Invert Rainbow: false
           Max Color: 0; 0; 0
-          Max Intensity: 0.634209930896759
           Min Color: 0; 0; 0
-          Min Intensity: 0
           Name: local_esdf
           Position Transformer: XYZ
           Queue Size: 10
@@ -339,9 +329,7 @@ Visualization Manager:
           Enabled: false
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 4096
           Min Color: 0; 0; 0
-          Min Intensity: 0
           Name: depth_cloud
           Position Transformer: XYZ
           Queue Size: 10
@@ -373,9 +361,7 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 1
           Min Color: 0; 0; 0
-          Min Intensity: 0.3000003695487976
           Name: real_map
           Position Transformer: XYZ
           Queue Size: 10
@@ -407,9 +393,7 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 4096
           Min Color: 0; 0; 0
-          Min Intensity: 0
           Name: simulation_map
           Position Transformer: XYZ
           Queue Size: 10
@@ -427,7 +411,7 @@ Visualization Manager:
           Marker Topic: /odom_visualization/robot
           Name: robot
           Namespaces:
-            {}
+            mesh: true
           Queue Size: 100
           Value: true
       Enabled: true
@@ -523,9 +507,7 @@ Visualization Manager:
       Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: depthcloud
       Position Transformer: XYZ
       Queue Size: 10
@@ -553,9 +535,7 @@ Visualization Manager:
       Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: debug
       Position Transformer: XYZ
       Queue Size: 10
@@ -583,9 +563,7 @@ Visualization Manager:
       Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: debug2
       Position Transformer: XYZ
       Queue Size: 10
@@ -664,9 +642,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: PointCloud2
       Position Transformer: XYZ
       Queue Size: 10
@@ -678,6 +654,12 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
+      Value: true
+    - Class: voxblox_rviz_plugin/VoxbloxMesh
+      Enabled: true
+      Name: VoxbloxMesh
+      Topic: /exploration_node/mesh
+      Unreliable: false
       Value: true
   Enabled: true
   Global Options:
@@ -706,7 +688,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 36.022361755371094
+      Distance: 37.52267074584961
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -721,10 +703,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.1797970533370972
+      Pitch: 1.274796962738037
       Target Frame: <Fixed Frame>
       Value: ThirdPersonFollower (rviz)
-      Yaw: 3.139589309692383
+      Yaw: 3.1495871543884277
     Saved:
       - Class: rviz/ThirdPersonFollower
         Distance: 40.93450164794922
@@ -779,7 +761,7 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1687
-  X: 0
+  X: 67
   Y: 27
   depth:
     collapsed: false

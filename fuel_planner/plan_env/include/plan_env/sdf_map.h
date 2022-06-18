@@ -4,6 +4,8 @@
 #include <Eigen/Eigen>
 #include <Eigen/StdVector>
 
+#include <Eigen/src/Core/Matrix.h>
+#include <Eigen/src/Core/VectorBlock.h>
 #include <queue>
 #include <ros/node_handle.h>
 #include <ros/ros.h>
@@ -198,17 +200,32 @@ inline void SDFMap::boundBox(Eigen::Vector3d& low, Eigen::Vector3d& up) {
 }
 
 inline int SDFMap::getOccupancy(const Eigen::Vector3i& id) {
-  if (!isInMap(id)) return -1;
-  double occ = md_->occupancy_buffer_[toAddress(id)];
-  if (occ < mp_->clamp_min_log_ - 1e-3) return UNKNOWN;
-  if (occ > mp_->min_occupancy_log_) return OCCUPIED;
-  return FREE;
+  // if (!isInMap(id)) return -1;
+  // double occ = md_->occupancy_buffer_[toAddress(id)];
+  // if (occ < mp_->clamp_min_log_ - 1e-3) return UNKNOWN;
+  // if (occ > mp_->min_occupancy_log_) return OCCUPIED;
+  // return FREE;
+  Eigen::Vector3d pos;
+  indexToPos(id, pos);
+  return getOccupancy(pos);
 }
 
 inline int SDFMap::getOccupancy(const Eigen::Vector3d& pos) {
-  Eigen::Vector3i id;
-  posToIndex(pos, id);
-  return getOccupancy(id);
+  // Eigen::Vector3i id;
+  // posToIndex(pos, id);
+  // return getOccupancy(id);
+  if(!isInMap(pos)) return -1;
+  double distance = 0.0;
+  if (esdf_server_->getEsdfMapPtr()->getDistanceAtPosition(pos, &distance)) {
+    // This means the voxel is observed
+    if (distance < mp_->resolution_) {
+      return OCCUPIED;
+    } else {
+      return FREE;
+    }
+  } else {
+    return UNKNOWN;
+  }
 }
 
 inline void SDFMap::setOccupied(const Eigen::Vector3d& pos, const int& occ) {
@@ -219,25 +236,43 @@ inline void SDFMap::setOccupied(const Eigen::Vector3d& pos, const int& occ) {
 }
 
 inline int SDFMap::getInflateOccupancy(const Eigen::Vector3i& id) {
-  if (!isInMap(id)) return -1;
-  return int(md_->occupancy_buffer_inflate_[toAddress(id)]);
+  // if (!isInMap(id)) return -1;
+  // return int(md_->occupancy_buffer_inflate_[toAddress(id)]);
+  Eigen::Vector3d pos;
+  indexToPos(id, pos);
+  return getInflateOccupancy(pos);
 }
 
 inline int SDFMap::getInflateOccupancy(const Eigen::Vector3d& pos) {
-  Eigen::Vector3i id;
-  posToIndex(pos, id);
-  return getInflateOccupancy(id);
+  // Eigen::Vector3i id;
+  // posToIndex(pos, id);
+  // return getInflateOccupancy(id);
+  if (!isInMap(pos)) return -1;
+  double distance = 0.0;
+  if (esdf_server_->getEsdfMapPtr()->getDistanceAtPosition(pos, &distance)) {
+    if (distance < mp_->obstacles_inflation_) return 1;
+  }
+  return 0;
 }
 
 inline double SDFMap::getDistance(const Eigen::Vector3i& id) {
-  if (!isInMap(id)) return -1;
+  // if (!isInMap(id)) return -1;
   return md_->distance_buffer_[toAddress(id)];
+  Eigen::Vector3d pos;
+  indexToPos(id, pos);
+  return getDistance(pos);
 }
 
 inline double SDFMap::getDistance(const Eigen::Vector3d& pos) {
-  Eigen::Vector3i id;
-  posToIndex(pos, id);
-  return getDistance(id);
+  // Eigen::Vector3i id;
+  // posToIndex(pos, id);
+  // return getDistance(id);
+  if(!isInMap(pos)) return -1;
+  double distance = mp_->default_dist_;
+  if (!esdf_server_->getEsdfMapPtr()->getDistanceAtPosition(pos, &distance)) {
+    return mp_->default_dist_;
+  }
+  return distance;
 }
 
 inline void SDFMap::inflatePoint(const Eigen::Vector3i& pt, int step, vector<Eigen::Vector3i>& pts) {
